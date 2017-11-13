@@ -1,0 +1,50 @@
+
+USE ljj_chembl;
+
+
+# filter targets
+DROP TABLE IF EXISTS target_cleaned;
+CREATE TABLE target_cleaned (
+  tid INT(9) NOT NULL PRIMARY KEY,
+  pref_name VARCHAR(200) NOT NULL,
+  chembl_id VARCHAR(20) NOT NULL,
+  INDEX (chembl_id),
+  INDEX (pref_name)
+) AS (
+    SELECT
+      tid,
+      pref_name,
+      chembl_id
+    FROM
+      chembl.target_dictionary
+    WHERE
+      organism='Homo sapiens'
+      AND target_type='CELL-LINE'
+);
+
+
+# filter assays
+DROP TABLE IF EXISTS assay_target;
+CREATE TABLE assay_target (
+  assay_id INT(9) NOT NULL PRIMARY KEY,
+  tid INT(9) NOT NULL,
+  confidence_score INT(1) NOT NULL,
+  pref_name VARCHAR(200) NOT NULL,
+  chembl_id VARCHAR(20) NOT NULL,
+  INDEX (chembl_id),
+  INDEX (pref_name),
+  INDEX (tid),
+  INDEX (confidence_score)
+) AS (
+    SELECT
+      T1.assay_id,
+      T1.tid,
+      T1.confidence_score,
+      T2.pref_name,
+			T2.chembl_id 
+    FROM
+      chembl.assays AS T1
+INNER JOIN 
+    ljj_chembl.target_cleaned AS T2
+ ON T1.tid=T2.tid
+);
